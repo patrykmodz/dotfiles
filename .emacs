@@ -2,6 +2,9 @@
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
 
+;;so shit can get found
+(add-to-list 'load-path "~/code/third-party")
+
 (setq make-backup-files nil)
 (setq create-lockfiles nil)
 
@@ -18,12 +21,17 @@
 (ido-everywhere 1)
 (setq ido-enable-flex-matching t
       ido-show-dot-for-dired t)
-
+;;smex - ido for mx
+  (require 'smex) ; Not needed if you use package.el
+  (smex-initialize) ; Can be omitted. This might cause a (minimal) delay
+                                        ; when Smex is auto-initialized on its first run.
+;;keybinding bs copied straight from the repo's readme
+  (global-set-key (kbd "M-x") 'smex)
+  (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+  ;; This is your old M-x.
+  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
 
 ;; simpc mode idk
-;; Adding `/path/to/simpc` to load-path so `require` can find it
-(add-to-list 'load-path "~/code/third-party")
-;; Importing simpc-mode
 (require 'simpc-mode)
 ;; Automatically enabling simpc-mode on files with extensions like .h, .c, .cpp, .hpp
 (add-to-list 'auto-mode-alist '("\\.[hc]\\(pp\\)?\\'" . simpc-mode))
