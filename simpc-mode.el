@@ -134,6 +134,33 @@
           (max (- prev-indent indent-len) 0))
          (t prev-indent))))))
 
+(advice-add 'simpc--desired-indentation :override
+            (lambda ()
+              (let ((prev (simpc--previous-non-empty-line)))
+                (if (not prev)
+                    (current-indentation)
+                  (let ((indent-len 4)
+                        (cur-line (string-trim-right (thing-at-point 'line t)))
+                        (prev-line (string-trim-right (car prev)))
+                        (prev-indent (cdr prev)))
+                    (cond
+                     ((string-match-p "^\\s-*switch\\s-*(.+)" prev-line)
+                      (+ prev-indent indent-len))
+                     ((and (string-suffix-p "{" prev-line)
+                           (string-prefix-p "}" (string-trim-left cur-line)))
+                      prev-indent)
+                     ((string-suffix-p "{" prev-line)
+                      (+ prev-indent indent-len))
+                     ((string-prefix-p "}" (string-trim-left cur-line))
+                      (max (- prev-indent indent-len) 0))
+                     ((string-suffix-p ":" prev-line)
+                      (if (string-suffix-p ":" cur-line)
+                          prev-indent
+                        (+ prev-indent indent-len)))
+                     ((string-suffix-p ":" cur-line)
+                      (max (- prev-indent indent-len) 0))
+                     (t prev-indent)))))))
+
 ;;; TODO: customizable indentation (amount of spaces, tabs, etc)
 (defun simpc-indent-line ()
   (interactive)
