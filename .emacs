@@ -132,7 +132,7 @@ tab-mark))
 
 (global-set-key (kbd "C-<backspace>") #'my-backward-delete-word)
 
-;; this thing sadly overwrites ido
+;; keybind fixed by setq-local <func>
 (defun my-tab ()
 "Insert four spaces."
 (interactive)
