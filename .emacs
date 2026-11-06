@@ -65,18 +65,6 @@
 
 (global-set-key (kbd "C-'") #'undo-redo)
 
-;;(electric-pair-mode 1)
-;;(setq electric-pair-pairs '((?\{ . ?\})))
-;;(setq electric-pair-text-pairs '((?\{ . ?\})))
-;;(electric-pair-mode 1)
-
-;;(electric-pair-mode -1)
-;;(electric-pair-mode 0)
-;;(setq electric-pair-pairs '((?\{ . ?\})))
-;;(setq electric-pair-text-pairs nil)
-
-;;(electric-pair-mode 1)
-
 (setq-default tab-width 4)
 (setq-default c-basic-offset 4)
 (setq-default indent-tabs-mode nil)
@@ -103,33 +91,33 @@ space-mark
 tab-mark))
 
 (global-whitespace-mode 1)
-
 (defun my-backward-delete-word ()
-"Delete backwards using editor-style word and punctuation rules."
-(interactive)
-(cond
-;; at the beginning of a line, delete the newline
-((bolp)
-(when (> (point) (point-min))
-(delete-char -1)))
+  "Delete backwards using editor-style word and punctuation rules."
+  (interactive)
+  (cond
+   ;; Beginning of line: delete newline
+   ((bolp)
+    (when (> (point) (point-min))
+      (delete-char -1)))
 
-;; on whitespace, delete whitespace and the preceding word
-((looking-back "[ \t]" 1)
-(let ((end (point)))
-(skip-chars-backward " \t")
-(skip-chars-backward "[:alnum:]_")
-(delete-region (point) end)))
+   ;; Whitespace: delete up to four spaces
+    ((looking-back "[ \t]" 1)
+     (let* ((end (point))
+            (start (save-excursion
+                     (skip-chars-backward " \t")
+                     (max (point) (- end 4)))))
+       (delete-region start end)
+       (goto-char start)))
 
-;; on punctuation, delete one character
-((looking-back "[^[:alnum:]_ \t]" 1)
-(delete-char -1))
+   ;; Punctuation: delete one character
+   ((looking-back "[^[:alnum:]_ \t]" 1)
+    (delete-char -1))
 
-;; otherwise, delete the preceding word
-(t
-(let ((end (point)))
-(skip-chars-backward "[:alnum:]_")
-(delete-region (point) end)))))
-
+   ;; Otherwise: delete previous word
+   (t
+    (let ((end (point)))
+      (skip-chars-backward "[:alnum:]_")
+      (delete-region (point) end)))))
 (global-set-key (kbd "C-<backspace>") #'my-backward-delete-word)
 
 ;; keybind fixed by setq-local <func>
@@ -137,9 +125,9 @@ tab-mark))
 "Insert four spaces."
 (interactive)
 (insert "    "))
-(add-hook 'simpc-mode-hook
-          (lambda ()
-            (setq-local indent-line-function #'my-tab)))
+;; (add-hook 'simpc-mode-hook
+;;           (lambda ()
+;;             (setq-local indent-line-function #'my-tab)))
 
 ;;(global-set-key (kbd "TAB") #'my-tab)
 ;;(global-set-key (kbd "<tab>") #'my-tab)
