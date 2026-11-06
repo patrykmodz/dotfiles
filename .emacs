@@ -15,6 +15,9 @@
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 
+;;find file at point (go to file at define?)
+(global-set-key(kbd"C-c f")'find-file-at-point)
+
 ;; ido
 (require 'ido)
 (ido-mode 1)
