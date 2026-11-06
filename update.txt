@@ -3,3 +3,6 @@ cp ~/.emacs ~/code/dotfiles/.emacs
 
 to update simpc-mode.el:
 cp ~/code/third-party/simpc-mode.el ~/code/dotfiles/simpc-mode.el
+
+to update smex.el:
+cp ~/code/third-party/smex.el ~/code/dotfiles/smex.el
