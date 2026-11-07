@@ -113,24 +113,31 @@
       (delete-region (point) end)))))
 
 (defun my-indent ()
-"indent the current line or selected lines by four spaces."
-(interactive)
-(if (use-region-p)
-(let ((deactivate-mark nil))
-(indent-rigidly (region-beginning) (region-end) 4))
-(beginning-of-line)
-(insert "    ")))
+  "indent the current line or selected lines by four spaces."
+  (interactive)
+  (if (use-region-p)
+      (let ((deactivate-mark nil))
+        (indent-rigidly (region-beginning) (region-end) 4))
+    (save-excursion
+      (beginning-of-line)
+      (insert "    "))
+    (when (= (current-column) 0)
+      (forward-char 4))))
 
 (defun my-unindent ()
-"unindent the current line or selected lines by four spaces."
-(interactive)
-(if (use-region-p)
-(let ((deactivate-mark nil))
-(indent-rigidly (region-beginning) (region-end) -4))
-(beginning-of-line)
-(let ((start (point)))
-(skip-chars-forward " " (min (+ start 4) (line-end-position)))
-(delete-region start (point)))))
+  "unindent the current line or selected lines by four spaces."
+  (interactive)
+  (if (use-region-p)
+      (let ((deactivate-mark nil))
+        (indent-rigidly (region-beginning) (region-end) -4))
+    (let ((column (current-column)))
+      (save-excursion
+        (beginning-of-line)
+        (let ((start (point)))
+          (skip-chars-forward " " (min (+ start 4) (line-end-position)))
+          (delete-region start (point))))
+      (when (<= column 4)
+        (back-to-indentation)))))
 
 ;; custom set variables
 (custom-set-variables
