@@ -1,22 +1,39 @@
+;;; -*- lexical-binding: t -*-
+(add-to-list 'load-path "~/code/third-party")
+;; theme
+(load-theme 'gruber-darker t)
+;;appearance
 (tool-bar-mode 0)
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
-
-;;so shit can get found
-(add-to-list 'load-path "~/code/third-party")
-
+(setq ring-bell-function 'ignore) ; fucks off that annoying beep
+;; disable bs emacs files
 (setq make-backup-files nil)
 (setq create-lockfiles nil)
-
-(set-face-attribute 'default nil
-:family "JetBrains Mono"
-:height 170)
-
+;; splash
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
+;;lines
+(setq display-line-numbers-type 'relative)
+(global-display-line-numbers-mode 1)
+;; font
+(set-face-attribute 'default nil
+                    :family "JetBrains Mono"
+                    :height 170)
+;; whitespacing
+(global-whitespace-mode 1)
+; exclude newline
+(setq whitespace-style
+      '(face
+        tabs
+        spaces
+        space-mark
+        tab-mark))
 
-;;find file at point (go to file at define?)
-(global-set-key(kbd"C-c f")'find-file-at-point)
+;; tab
+(setq-default tab-width 4)
+(setq-default c-basic-offset 4)
+(setq-default indent-tabs-mode nil)
 
 ;; ido
 (require 'ido)
@@ -24,54 +41,32 @@
 (ido-everywhere 1)
 (setq ido-enable-flex-matching t
       ido-show-dot-for-dired t)
-;;smex - ido for mx
-  (require 'smex) ; Not needed if you use package.el
-  (smex-initialize) ; Can be omitted. This might cause a (minimal) delay
-                                        ; when Smex is auto-initialized on its first run.
-;;keybinding bs copied straight from the repo's readme
-  (global-set-key (kbd "M-x") 'smex)
-  (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-  ;; This is your old M-x.
-  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
 
-;; simpc mode idk
+;;smex - ido for mx
+(require 'smex)
+(smex-initialize)
+(global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "M-X") 'smex-major-mode-commands)
+;; old m-x
+(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
+
+;;simpc-mode
 (require 'simpc-mode)
-;; Automatically enabling simpc-mode on files with extensions like .h, .c, .cpp, .hpp
 (add-to-list 'auto-mode-alist '("\\.[hc]\\(pp\\)?\\'" . simpc-mode))
 
-(add-hook 'minibuffer-setup-hook
-(lambda ()
-(setq-local line-spacing 0.5)))
-
-(load-theme 'gruber-darker t)
-
-(setq display-line-numbers-type 'relative)
-
-(global-display-line-numbers-mode 1)
-
-(defun my-display-line-numbers-current-line ()
-  (setq-local display-line-numbers-width
-              (max 4 (length (number-to-string (line-number-at-pos))))))
-
-(add-hook 'display-line-numbers-mode-hook
-          #'my-display-line-numbers-current-line)
-
-(setq ring-bell-function 'ignore)
-
-(defun my-delete-line ()
-"delete the current line without killing it."
-(interactive)
-(delete-region (line-beginning-position)
-(line-beginning-position 2)))
-
+;; custom keybindings
+;find file at point
+(global-set-key(kbd"C-c f")'find-file-at-point)
+;other
+(global-set-key (kbd "M-p") #'my-move-line-up)
+(global-set-key (kbd "M-n") #'my-move-line-down)
 (global-set-key (kbd "C-c d") #'my-delete-line)
-
 (global-set-key (kbd "C-'") #'undo-redo)
+(global-set-key (kbd "C-<backspace>") #'my-backward-delete-word)
+(global-set-key (kbd "M-[") #'my-unindent)
+(global-set-key (kbd "M-]") #'my-indent)
 
-(setq-default tab-width 4)
-(setq-default c-basic-offset 4)
-(setq-default indent-tabs-mode nil)
-
+;; custom functions
 (defun my-move-line-up ()
 (interactive)
 (transpose-lines 1)
@@ -83,27 +78,22 @@
 (transpose-lines 1)
 (forward-line -1))
 
-(global-set-key (kbd "M-p") #'my-move-line-up)
-(global-set-key (kbd "M-n") #'my-move-line-down)
+(defun my-delete-line ()
+"delete the current line without killing it."
+(interactive)
+(delete-region (line-beginning-position)
+(line-beginning-position 2)))
 
-(setq whitespace-style
-'(face
-tabs
-spaces
-space-mark
-tab-mark))
-
-(global-whitespace-mode 1)
 (defun my-backward-delete-word ()
-  "Delete backwards using editor-style word and punctuation rules."
+  "delete backwards using editor-style word and punctuation rules."
   (interactive)
   (cond
-   ;; Beginning of line: delete newline
+   ; beginning of line: delete newline
    ((bolp)
     (when (> (point) (point-min))
       (delete-char -1)))
 
-   ;; Whitespace: delete up to four spaces
+   ; whitespace: delete up to four spaces
     ((looking-back "[ \t]" 1)
      (let* ((end (point))
             (start (save-excursion
@@ -112,31 +102,18 @@ tab-mark))
        (delete-region start end)
        (goto-char start)))
 
-   ;; Punctuation: delete one character
+   ; punctuation: delete one character
    ((looking-back "[^[:alnum:]_ \t]" 1)
     (delete-char -1))
 
-   ;; Otherwise: delete previous word
+   ; otherwise: delete previous word
    (t
     (let ((end (point)))
       (skip-chars-backward "[:alnum:]_")
       (delete-region (point) end)))))
-(global-set-key (kbd "C-<backspace>") #'my-backward-delete-word)
-
-;; keybind fixed by setq-local <func>
-(defun my-tab ()
-"Insert four spaces."
-(interactive)
-(insert "    "))
-;; (add-hook 'simpc-mode-hook
-;;           (lambda ()
-;;             (setq-local indent-line-function #'my-tab)))
-
-;;(global-set-key (kbd "TAB") #'my-tab)
-;;(global-set-key (kbd "<tab>") #'my-tab)
 
 (defun my-indent ()
-"Indent the current line or selected lines by four spaces."
+"indent the current line or selected lines by four spaces."
 (interactive)
 (if (use-region-p)
 (let ((deactivate-mark nil))
@@ -145,7 +122,7 @@ tab-mark))
 (insert "    ")))
 
 (defun my-unindent ()
-"Unindent the current line or selected lines by four spaces."
+"unindent the current line or selected lines by four spaces."
 (interactive)
 (if (use-region-p)
 (let ((deactivate-mark nil))
@@ -155,18 +132,9 @@ tab-mark))
 (skip-chars-forward " " (min (+ start 4) (line-end-position)))
 (delete-region start (point)))))
 
-(global-set-key (kbd "M-[") #'my-unindent)
-(global-set-key (kbd "M-]") #'my-indent)
-
-;;; -*- lexical-binding: t -*-
-
+;; custom set variables
 (custom-set-variables
-'(custom-safe-themes
-'("e13beeb34b932f309fb2c360a04a460821ca99fe58f69e65557d6c1b10ba18c7"
-default))
-'(package-selected-packages '(gruber-darker-theme linum-relative)))
-
-(custom-set-faces
-'(whitespace-space ((t nil)))
-'(whitespace-tab ((t nil))))
-
+ '(custom-safe-themes
+   '("e13beeb34b932f309fb2c360a04a460821ca99fe58f69e65557d6c1b10ba18c7"
+     default))
+ '(package-selected-packages '(gruber-darker-theme linum-relative)))
