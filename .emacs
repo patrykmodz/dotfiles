@@ -94,22 +94,22 @@
       (delete-char -1)))
 
    ; whitespace: delete up to four spaces
-    ((looking-back "[ \t]" 1)
-     (let* ((end (point))
-            (start (save-excursion
-                     (skip-chars-backward " \t")
-                     (max (point) (- end 4)))))
-       (delete-region start end)
-       (goto-char start)))
+   ((looking-back "[ \t]" 1)
+    (let* ((end (point))
+           (start (save-excursion
+                    (skip-chars-backward " \t")
+                    (max (point) (- end 4)))))
+      (delete-region start end)
+      (goto-char start)))
 
    ; punctuation: delete one character
-   ((looking-back "[^[:alnum:]_ \t]" 1)
+   ((looking-back "[^[:alnum:] \t]" 1)
     (delete-char -1))
 
    ; otherwise: delete previous word
    (t
     (let ((end (point)))
-      (skip-chars-backward "[:alnum:]_")
+      (skip-chars-backward "[:alnum:]")
       (delete-region (point) end)))))
 
 (defun my-indent ()
