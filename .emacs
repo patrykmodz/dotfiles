@@ -139,6 +139,11 @@
       (when (<= column 4)
         (back-to-indentation)))))
 
+(defun generate-tags ()
+  "Generate a TAGS file for C source and header files."
+  (interactive)
+  (shell-command "find . -type f \\( -name '*.c' -o -name '*.h' \\) -print0 | xargs -0 etags"))
+
 ;; custom set variables
 (custom-set-variables
  '(custom-safe-themes
