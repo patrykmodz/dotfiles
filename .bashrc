@@ -3,8 +3,9 @@
 # for examples
 
 # alias run='make clean && make && qemu-system-i386 -cdrom build/patrix.iso'
-# alias tt='/home/patrykmodz/code/tt/build/tt'
-
+alias tt='/home/patrykmodz/code/tt/build/tt'
+alias iv='/home/patrykmodz/code/iv/build/iv'
+alias hyfetch='command hyfetch --ascii-file ~/.config/hyfetch/debian.txt'
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
