@@ -16,6 +16,7 @@
 ;;lines
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
+(setq-default truncate-lines t) ; make lines continue horizontally off-screen
 ;; font
 (set-face-attribute 'default nil
                     :family "JetBrains Mono"
