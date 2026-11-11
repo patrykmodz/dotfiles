@@ -31,7 +31,7 @@ exec --no-startup-id systemctl --user import-environment DISPLAY
 
 # fix screen
 bindsym $mod+g exec xrandr --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --output HDMI-1 --off
-
+exec --no-startup-id xssproxy # stop screen sleeping when watching video more than 10 mins long
 exec --no-startup-id ~/.fehbg
 exec_always --no-startup-id picom
 exec --no-startup-id xinput set-prop 17 "libinput Accel Profile Enabled" 0, 1, 0
