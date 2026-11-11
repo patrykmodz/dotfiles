@@ -17,6 +17,7 @@
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
 (setq-default truncate-lines t) ; make lines continue horizontally off-screen
+(setq-default column-number-mode t) ; show line-column in statusbar
 ;; font
 (set-face-attribute 'default nil
                     :family "JetBrains Mono"
@@ -66,6 +67,7 @@
 (global-set-key (kbd "C-<backspace>") #'my-backward-delete-word)
 (global-set-key (kbd "M-[") #'my-unindent)
 (global-set-key (kbd "M-]") #'my-indent)
+(global-set-key (kbd "C-,") #'duplicate-line)
 
 ;; custom functions
 (defun my-move-line-up ()
