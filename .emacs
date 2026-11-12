@@ -6,6 +6,11 @@
 (tool-bar-mode 0)
 (menu-bar-mode 0)
 (scroll-bar-mode 0)
+; set window size
+(add-to-list 'default-frame-alist '(width . 100))
+(add-to-list 'default-frame-alist '(height . 30))
+; center window
+(set-frame-position (selected-frame) 250 73)
 (setq ring-bell-function 'ignore) ; fucks off that annoying beep
 ;; disable bs emacs files
 (setq make-backup-files nil)
