@@ -1,7 +1,9 @@
 ;;; -*- lexical-binding: t -*-
-(add-to-list 'load-path "~/code/third-party")
+(add-to-list 'load-path "~/code/third-party/emacs")
+(add-to-list 'custom-theme-load-path "~/code/third-party/emacs/themes")
 ;; theme
 (load-theme 'gruber-darker t)
+; (load-theme 'ancient-one-dark t)
 ;;appearance
 (tool-bar-mode 0)
 (menu-bar-mode 0)
@@ -35,6 +37,15 @@
         space-mark
         tab-mark))
 
+;; ;; whitespace colours
+;; (let ((bg (face-background 'default nil t)))
+;;   (set-face-attribute 'whitespace-space nil
+;;                       :foreground "#51485f"
+;;                       :background bg)
+;;   (set-face-attribute 'whitespace-tab nil
+;;                       :foreground "#51485f"
+;;                       :background bg))
+
 ;; tab
 (setq-default tab-width 4)
 (setq-default c-basic-offset 4)
@@ -46,6 +57,10 @@
 (ido-everywhere 1)
 (setq ido-enable-flex-matching t
       ido-show-dot-for-dired t)
+; theme-specific
+(set-face-attribute 'ido-subdir nil
+                    :foreground "#C792EA"
+                    :weight 'bold)
 
 ;;smex - ido for mx
 (require 'smex)
@@ -151,8 +166,4 @@
   (shell-command "find . -type f \\( -name '*.c' -o -name '*.h' \\) -print0 | xargs -0 etags"))
 
 ;; custom set variables
-(custom-set-variables
- '(custom-safe-themes
-   '("e13beeb34b932f309fb2c360a04a460821ca99fe58f69e65557d6c1b10ba18c7"
-     default))
- '(package-selected-packages '(gruber-darker-theme linum-relative)))
+;; cleared
