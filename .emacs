@@ -15,6 +15,7 @@
 ;; disable bs emacs files
 (setq make-backup-files nil)
 (setq create-lockfiles nil)
+(setq auto-save-default nil)
 ;; splash
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
