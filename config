@@ -29,8 +29,11 @@ bindsym XF86AudioLowerVolume exec --no-startup-id wpctl set-volume -l 1.5 @DEFAU
 # OpenTabletDriver environment
 exec --no-startup-id systemctl --user import-environment DISPLAY
 
-# fix screen
+# single monitor mode
 bindsym $mod+g exec xrandr --output eDP-1 --primary --mode 1920x1080 --pos 0x0 --output HDMI-1 --off
+# dual monitor mode
+bindsym $mod+Shift+g exec --no-startup-id xrandr --output HDMI-1 --mode 1920x1080 --rate 60 --left-of eDP-1 --output eDP-1 --primary --mode 1920x1080 --rate 60
+
 exec --no-startup-id xssproxy # stop screen sleeping when watching video more than 10 mins long
 exec --no-startup-id ~/.fehbg
 exec_always --no-startup-id picom
