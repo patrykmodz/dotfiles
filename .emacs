@@ -1,5 +1,6 @@
 ;;; -*- lexical-binding: t -*-
 (add-to-list 'load-path "~/code/third-party/emacs")
+(add-to-list 'load-path "~/code/third-party/emacs/multiple-cursors")
 (add-to-list 'custom-theme-load-path "~/code/third-party/emacs/themes")
 ;; theme
 (load-theme 'gruber-darker t)
@@ -168,3 +169,10 @@
 
 ;; custom set variables
 ;; cleared
+
+
+(require 'multiple-cursors)
+;; (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines) ; i don't have a clue what this does.
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+;; (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this) ; i don't have a clue what this does.
