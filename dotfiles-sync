@@ -1,0 +1,308 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import shutil
+import signal
+import sys
+import threading
+import fcntl
+
+from pathlib import Path
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+HOME = Path.home()
+REPO = HOME / "code/dotfiles"
+STATE_DIR = HOME / ".config/dotfiles-sync"
+MANIFEST = STATE_DIR / "manifest.json"
+PIDFILE = STATE_DIR / "watcher.pid"
+
+reload_event = threading.Event()
+sync_lock = threading.Lock()
+
+
+def load_manifest():
+    if not MANIFEST.exists():
+        return {}
+
+    try:
+        return json.loads(MANIFEST.read_text())
+    except (json.JSONDecodeError, OSError):
+        print("error: cannot read manifest.")
+        sys.exit(1)
+
+
+def save_manifest(data):
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+    temporary = MANIFEST.with_suffix(".tmp")
+    temporary.write_text(json.dumps(data, indent=4) + "\n")
+    temporary.replace(MANIFEST)
+
+
+def sync_file(source, destination):
+    source = Path(source)
+    destination = REPO / destination
+
+    if not source.is_file():
+        return
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    temporary = destination.with_name(destination.name + ".tmp")
+
+    try:
+        shutil.copy2(source, temporary)
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def add_file(source, name=None):
+    source = Path(source).expanduser().resolve()
+
+    if not source.is_file():
+        print(f"error: {source} is not a file.")
+        return 1
+
+    name = name or source.name
+
+    destination_name = Path(name)
+
+    if (destination_name.is_absolute()
+            or ".." in destination_name.parts
+            or name in ("", ".")):
+        print("error: invalid destination path.")
+        return 1
+
+    manifest = load_manifest()
+
+    if str(source) in manifest:
+        print(f"already registered: {source}")
+        return 0
+
+    if name in manifest.values():
+        print(f"error: destination name already registered: {name}")
+        return 1
+
+    destination = REPO / name
+
+    if destination.exists():
+        if not destination.is_file():
+            print(f"error: destination is not a regular file: {destination}")
+            return 1
+
+        if source.read_bytes() != destination.read_bytes():
+            print(f"error: destination already exists: {destination}")
+            return 1
+
+    REPO.mkdir(parents=True, exist_ok=True)
+
+    manifest[str(source)] = name
+    save_manifest(manifest)
+
+    sync_file(source, name)
+
+    print(f"registered: {source}")
+    print(f"destination: {destination}")
+
+    reload_event.set()
+
+    if PIDFILE.exists():
+        try:
+            os.kill(int(PIDFILE.read_text()), signal.SIGUSR1)
+        except (ValueError, ProcessLookupError, PermissionError):
+            pass
+
+    return 0
+
+def add_directory(source):
+    source = Path(source).expanduser().resolve()
+
+    if not source.is_dir():
+        print(f"error: {source} is not a directory.")
+        return 1
+
+    files = sorted(
+        path for path in source.rglob("*")
+        if path.is_file()
+        and ".git" not in path.parts
+    )
+
+    if not files:
+        print("no files found.")
+        return 0
+
+    print(f"found {len(files)} files in {source}")
+
+    for file in files:
+        relative = file.relative_to(source)
+        destination = str(Path(source.name) / relative)
+
+        result = add_file(file, destination)
+
+        if result != 0:
+            print(f"failed to register: {file}")
+            return result
+
+    return 0
+
+class SyncHandler(FileSystemEventHandler):
+
+    def __init__(self, manifest):
+        self.manifest = manifest
+        self.timers = {}
+        self.lock = threading.Lock()
+
+    def on_any_event(self, event):
+        if event.is_directory:
+            return
+
+        if event.event_type not in ("modified", "created", "moved"):
+            return
+
+        paths = [event.src_path]
+
+        if event.event_type == "moved":
+            paths.append(event.dest_path)
+
+        for path in paths:
+            source = str(Path(path).resolve())
+
+            if source not in self.manifest:
+                continue
+
+            with self.lock:
+                old_timer = self.timers.get(source)
+
+                if old_timer:
+                    old_timer.cancel()
+
+                timer = threading.Timer(
+                    0.5,
+                    self.copy,
+                    args=(source,)
+                )
+
+                self.timers[source] = timer
+                timer.start()
+
+    def copy(self, source):
+        with sync_lock:
+            try:
+                sync_file(source, self.manifest[source])
+                print(f"synced: {self.manifest[source]}")
+            except OSError as error:
+                print(f"sync failed: {error}")
+
+
+
+def watch():
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+    lock_file = (STATE_DIR / "watcher.lock").open("a")
+
+    try:
+        fcntl.flock(
+            lock_file,
+            fcntl.LOCK_EX | fcntl.LOCK_NB
+        )
+    except BlockingIOError:
+        print("watcher already running.")
+        lock_file.close()
+        return
+
+    PIDFILE.write_text(str(os.getpid()))
+
+    def request_reload(signum, frame):
+        reload_event.set()
+
+    observer = None
+
+    try:
+        signal.signal(signal.SIGUSR1, request_reload)
+
+        while True:
+            manifest = load_manifest()
+
+            for source, destination in manifest.items():
+                try:
+                    sync_file(source, destination)
+                except OSError as error:
+                    print(f"initial sync failed for {source}: {error}")
+
+            observer = Observer()
+            handler = SyncHandler(manifest)
+
+            directories = {
+                str(Path(source).parent)
+                for source in manifest
+                if Path(source).parent.is_dir()
+            }
+
+            for directory in directories:
+                observer.schedule(
+                    handler,
+                    directory,
+                    recursive=False
+                )
+
+            observer.start()
+
+            print(f"watching {len(manifest)} registered files.")
+
+            reload_event.clear()
+
+            while not reload_event.wait():
+                pass
+
+            observer.stop()
+            observer.join()
+            observer = None
+
+    except KeyboardInterrupt:
+        print("\nstopping watcher.")
+
+    finally:
+        if observer:
+            observer.stop()
+            observer.join()
+
+        if PIDFILE.exists():
+            try:
+                if PIDFILE.read_text().strip() == str(os.getpid()):
+                    PIDFILE.unlink()
+            except OSError:
+                pass
+
+        lock_file.close()
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("usage:\ndotadd ~/foo.txt\ndotadd -r ~/foo/bar\n")
+        return 1
+
+    command = sys.argv[1]
+
+    if command == "add" and len(sys.argv) == 4:
+        if sys.argv[2] == "-r":
+            return add_directory(sys.argv[3])
+
+    if command == "add" and len(sys.argv) in (3, 4):
+        return add_file(
+            sys.argv[2],
+            sys.argv[3] if len(sys.argv) == 4 else None
+        )
+
+    if command == "watch" and len(sys.argv) == 2:
+        watch()
+        return 0
+
+    print("invalid command.")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
