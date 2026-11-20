@@ -49,8 +49,9 @@ exec --no-startup-id xinput set-prop "Elan Touchpad" "libinput Natural Scrolling
 bindsym Print exec --no-startup-id ~/.local/bin/screenie
 exec --no-startup-id xinput set-prop 9 329 0
 exec --no-startup-id nm-applet
+
 # dotfiles syncer
-exec --no-startup-id ~/.local/bin/dotfiles-sync watch
+exec_always --no-startup-id ~/.local/bin/dotfiles-sync watch
 
 #for_window [class="Emacs"] floating enable
 #for_window [class="Emacs"] move position 250 73
@@ -59,9 +60,13 @@ exec --no-startup-id ~/.local/bin/dotfiles-sync watch
 bindsym $mod+Shift+space floating toggle, [class="Emacs" floating] resize set width 1416 px height 930 px, [class="Emacs" floating] move position 252 75
 
 #boomer
-bindsym XF86Tools exec --no-startup-id ~/code/boomer/boomer
+bindsym XF86Tools exec --no-startup-id ~/code/third-party/boomer/boomer
 
-bindsym $mod+l exec --no-startup-id ~/.local/bin/lockscreen
+bindsym $mod+l exec --no-startup-id i3lock
+
+# fix scrolling - reload config when something breaks scrolling behaviour
+# on touchpad.
+exec --no-startup-id xinput set-prop 9 "libinput Natural Scrolling Enabled" 1
 
 
 # Start XDG autostart .desktop files using dex. See also
