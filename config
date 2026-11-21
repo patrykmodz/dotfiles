@@ -18,6 +18,11 @@ set $mod Mod4
 # is used in the bar {} block below.
 font pango:JetBrains Mono 8
 
+
+#brightness
+bindsym XF86MonBrightnessDown exec --no-startup-id sh -c 'v=$(sudo brightnessctl -d intel_backlight get) && [ "$v" -gt 960 ] && sudo brightnessctl -d intel_backlight set "$((v - 960))"'
+bindsym XF86MonBrightnessUp exec --no-startup-id sudo brightnessctl -d intel_backlight set 5%+
+
 # fix cursor size???
 exec_always --no-startup-id xsetroot -cursor_name left_ptr
 
@@ -62,7 +67,7 @@ bindsym $mod+Shift+space floating toggle, [class="Emacs" floating] resize set wi
 #boomer
 bindsym XF86Tools exec --no-startup-id ~/code/third-party/boomer/boomer
 
-bindsym $mod+l exec --no-startup-id i3lock
+bindsym $mod+l exec --no-startup-id i3lock -c 1a1a1a
 
 # fix scrolling - reload config when something breaks scrolling behaviour
 # on touchpad.
@@ -78,7 +83,7 @@ exec --no-startup-id dex --autostart --environment i3
 
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the
 # screen before suspend. Use loginctl lock-session to lock your screen.
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork -c 1a1a1a
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
